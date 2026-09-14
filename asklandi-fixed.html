@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASKLANDI 3.0 — AI English Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#132A2C;
+    --paper:#F1EFE6;
+    --panel:#FFFFFF;
+    --teal:#1B6B63;
+    --teal-deep:#0F4640;
+    --amber:#D98E2B;
+    --line:#D8D2C2;
+    --muted:#63706E;
+    --error-bg:#FBEFE3;
+    --error-line:#E4B77B;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  button{font-family:inherit;cursor:pointer;}
+  input{font-family:inherit;}
+
+  /* ---------- shell ---------- */
+  .shell{max-width:1080px;margin:0 auto;padding:0 24px 80px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;padding:28px 0 20px;border-bottom:1px solid var(--line);}
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand .mark{font-family:'Fraunces',serif;font-weight:600;font-size:1.5rem;letter-spacing:-0.01em;}
+  .brand .sub{font-size:0.8rem;color:var(--muted);}
+  nav.tabs{display:flex;gap:4px;}
+  nav.tabs button{background:none;border:none;padding:8px 14px;border-radius:20px;font-size:0.88rem;color:var(--muted);}
+  nav.tabs button.active{background:var(--teal);color:#fff;}
+
+  /* ---------- launcher ---------- */
+  .hero{padding:44px 0 28px;}
+  .hero h1{font-size:2.3rem;font-weight:500;line-height:1.15;margin:0 0 12px;max-width:640px;}
+  .hero p{color:var(--muted);max-width:520px;line-height:1.55;margin:0;}
+
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:28px 0 8px;}
+  .search{flex:1;min-width:220px;position:relative;}
+  .search input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:0.9rem;}
+  .search input:focus{outline:2px solid var(--teal);outline-offset:1px;}
+
+  .chiprow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
+  .chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 13px;border-radius:20px;font-size:0.82rem;}
+  .chip.active{background:var(--teal-deep);border-color:var(--teal-deep);color:#fff;}
+  .chip .count{color:var(--muted);font-size:0.76rem;margin-left:3px;}
+  .chip.active .count{color:#cfe6e2;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:18px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:10px;transition:border-color .15s;}
+  .card:hover{border-color:var(--teal);}
+  .card:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+  .card .tags{display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{font-size:0.68rem;padding:3px 8px;border-radius:3px;letter-spacing:0.02em;}
+  .tag.domain{background:#E4EEEC;color:var(--teal-deep);}
+  .tag.tier-Foundation{background:#EEF2E3;color:#57713A;}
+  .tag.tier-Intermediate{background:var(--error-bg);color:#9A6420;}
+  .tag.tier-Fluent{background:#F1E4E9;color:#8B3A54;}
+  .card h3{margin:0;font-size:1.08rem;font-weight:500;line-height:1.3;}
+  .card .character{font-size:0.82rem;color:var(--muted);}
+  .card .go{margin-top:auto;font-size:0.82rem;color:var(--teal-deep);font-weight:500;}
+  .empty{padding:50px 10px;text-align:center;color:var(--muted);}
+
+  /* ---------- session ---------- */
+  .session-header{display:flex;justify-content:space-between;align-items:flex-start;padding:24px 0 16px;border-bottom:1px solid var(--line);gap:16px;}
+  .session-header .meta{font-size:0.78rem;color:var(--muted);margin-bottom:4px;}
+  .session-header h2{margin:0 0 4px;font-size:1.5rem;font-weight:500;}
+  .session-header .setting{color:var(--muted);font-size:0.88rem;max-width:520px;}
+  .end-btn{border:1px solid var(--ink);background:none;color:var(--ink);padding:9px 16px;border-radius:6px;font-size:0.85rem;white-space:nowrap;}
+  .end-btn:hover{background:var(--ink);color:#fff;}
+
+  .session-body{display:grid;grid-template-columns:1fr 240px;gap:24px;margin-top:20px;}
+  @media(max-width:760px){.session-body{grid-template-columns:1fr;}}
+
+  .transcript{display:flex;flex-direction:column;gap:14px;min-height:200px;}
+  .bubble{max-width:82%;padding:12px 15px;border-radius:10px;font-size:0.93rem;line-height:1.5;}
+  .bubble.char{background:var(--panel);border:1px solid var(--line);align-self:flex-start;border-top-left-radius:2px;}
+  .bubble.user{background:var(--teal-deep);color:#fff;align-self:flex-end;border-top-right-radius:2px;}
+  .bubble .who{font-size:0.68rem;text-transform:none;letter-spacing:0.02em;opacity:0.65;display:block;margin-bottom:4px;}
+
+  .correction{align-self:flex-end;max-width:82%;background:var(--error-bg);border:1px solid var(--error-line);border-radius:8px;padding:11px 14px;font-size:0.83rem;line-height:1.5;}
+  .correction .row{margin-bottom:5px;}
+  .correction .label{color:#9A6420;font-weight:600;font-size:0.72rem;letter-spacing:0.02em;}
+  .correction .fixed{font-weight:500;}
+  .correction .why{color:#5b4a34;}
+  .correction .etag{display:inline-block;margin-top:6px;font-size:0.68rem;background:#F1DFC2;color:#7A5518;padding:2px 8px;border-radius:10px;}
+  .clean-tag{align-self:flex-end;font-size:0.76rem;color:var(--teal-deep);}
+
+  .composer{display:flex;gap:8px;margin-top:16px;}
+  .composer input{flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:0.92rem;}
+  .composer input:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .composer button{background:var(--teal-deep);color:#fff;border:none;padding:0 20px;border-radius:8px;font-size:0.88rem;}
+  .composer button:disabled{opacity:0.5;cursor:default;}
+
+  .sidebar h4{font-size:0.75rem;text-transform:none;letter-spacing:0.02em;color:var(--muted);margin:0 0 10px;font-weight:600;}
+  .sidebar .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:16px;}
+  .focus-item{display:flex;justify-content:space-between;font-size:0.83rem;padding:5px 0;border-bottom:1px solid #EDE9DC;}
+  .focus-item:last-child{border-bottom:none;}
+  .focus-item .n{color:var(--muted);}
+  .sidebar .placeholder{color:var(--muted);font-size:0.82rem;}
+  .thinking{color:var(--muted);font-size:0.85rem;font-style:italic;align-self:flex-start;}
+
+  /* ---------- summary ---------- */
+  .summary-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:26px;margin-top:20px;}
+  .summary-card h3{margin:0 0 4px;font-size:1.3rem;font-weight:500;}
+  .summary-card .meta{color:var(--muted);font-size:0.83rem;margin-bottom:18px;}
+  .stat-row{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:20px;}
+  .stat{}
+  .stat .num{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:500;}
+  .stat .lbl{font-size:0.76rem;color:var(--muted);}
+  .tip-box{background:var(--paper);border-left:3px solid var(--teal);padding:12px 16px;border-radius:0 6px 6px 0;font-size:0.88rem;line-height:1.55;margin-bottom:20px;}
+  .summary-actions{display:flex;gap:10px;}
+  .summary-actions button{padding:10px 18px;border-radius:6px;font-size:0.85rem;border:1px solid var(--ink);background:none;color:var(--ink);}
+  .summary-actions button.primary{background:var(--teal-deep);border-color:var(--teal-deep);color:#fff;}
+
+  /* ---------- log ---------- */
+  .log-list{display:flex;flex-direction:column;gap:10px;margin-top:24px;}
+  .log-item{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;}
+  .log-item .title{font-weight:500;}
+  .log-item .date{font-size:0.76rem;color:var(--muted);}
+  .log-item .topfocus{font-size:0.8rem;color:#9A6420;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="top">
+    <div class="brand">
+      <span class="mark">ASKLANDI 3.0</span>
+      <span class="sub">AI English Coach — Landi Institute</span>
+    </div>
+    <nav class="tabs">
+      <button id="tab-launcher" class="active">Practice</button>
+      <button id="tab-log">Coaching Log</button>
+    </nav>
+  </header>
+
+  <main id="view-launcher">
+    <section class="hero">
+      <h1>Practice English in the room where it actually happens.</h1>
+      <p>Pick a real-life situation, play it out with an AI conversation partner, and get corrected in the moment — not after a quiz.</p>
+    </section>
+
+    <div class="controls">
+      <div class="search">
+        <input id="search" type="text" placeholder="Search scenarios — e.g. interview, refund, small talk">
+      </div>
+    </div>
+
+    <div class="chiprow" id="domain-chips"></div>
+    <div class="chiprow" id="tier-chips"></div>
+
+    <div class="grid" id="scenario-grid"></div>
+    <div class="empty" id="empty-state" style="display:none;">No scenarios match that search.</div>
+  </main>
+
+  <main id="view-session" style="display:none;">
+    <div class="session-header">
+      <div>
+        <div class="meta" id="s-meta"></div>
+        <h2 id="s-title"></h2>
+        <div class="setting" id="s-setting"></div>
+      </div>
+      <button class="end-btn" id="end-session">End session</button>
+    </div>
+
+    <div class="session-body">
+      <div>
+        <div class="transcript" id="transcript"></div>
+        <div class="composer">
+          <input id="user-input" type="text" placeholder="Type your reply in English…" autocomplete="off">
+          <button id="send-btn">Send</button>
+        </div>
+      </div>
+      <div class="sidebar">
+        <div class="panel">
+          <h4>Focus areas this session</h4>
+          <div id="focus-list"><div class="placeholder">Corrections will appear here as you go.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="summary-wrap"></div>
+  </main>
+
+  <main id="view-log" style="display:none;">
+    <section class="hero" style="padding-top:36px;">
+      <h1 style="font-size:1.8rem;">Coaching log</h1>
+      <p>A record of every session, so patterns across scenarios are easy to spot.</p>
+    </section>
+    <div class="log-list" id="log-list"></div>
+    <div class="empty" id="log-empty" style="display:none;">No sessions yet — finish a practice session and it'll show up here.</div>
+  </main>
+
+</div>
+
+<script>
+const DOMAINS = [
+  {id:'business', name:'Business English'},
+  {id:'travel', name:'Travel & Airport'},
+  {id:'dining', name:'Restaurant & Dining'},
+  {id:'interview', name:'Job Interview'},
+  {id:'smalltalk', name:'Everyday Small Talk'}
+];
+const TIERS = ['Foundation','Intermediate','Fluent'];
+
+const SCENARIOS = [
+  {id:'biz-1', domain:'business', tier:'Foundation', title:'Introducing Yourself at a Meeting', character:'Aria, the meeting host', setting:'A weekly team meeting. Aria has just opened the floor and asked you to introduce yourself to two new colleagues.', opening:"Good morning, everyone — before we start, could you quickly introduce yourself for the two new team members joining us today?"},
+  {id:'biz-2', domain:'business', tier:'Intermediate', title:'Negotiating a Deadline Extension', character:'Mr. Tan, the client', setting:"A call with a client whose project is due Friday. You need one more week and have to explain why without losing his confidence.", opening:"So, are we still on track for Friday? I've already told my board it's happening."},
+  {id:'biz-3', domain:'business', tier:'Fluent', title:'Handling Pushback in a Strategy Review', character:'Ms. Okafor, senior director', setting:'You are presenting a proposal and Ms. Okafor has just raised a firm objection to your budget assumptions.', opening:"I'll be honest, I don't think these numbers hold up under scrutiny. Walk me through your reasoning."},
+  {id:'trv-1', domain:'travel', tier:'Foundation', title:'Checking In at the Airport Counter', character:'Airline check-in agent', setting:'You are checking in for an international flight and need to confirm your seat and baggage.', opening:"Good afternoon! Passport and ticket, please. Where are you flying to today?"},
+  {id:'trv-2', domain:'travel', tier:'Intermediate', title:'Rebooking a Missed Connection', character:'Airline transfer desk agent', setting:'Your connecting flight has just left without you and you need a new one, ideally today.', opening:"I see your connection departed twenty minutes ago. Let's see what we can do — what's your final destination?"},
+  {id:'trv-3', domain:'travel', tier:'Fluent', title:'Resolving a Visa Document Issue with an Officer', character:'Immigration officer', setting:'An officer has flagged a missing document at the border and is asking you to explain the situation calmly.', opening:"There's a document missing from your file. Can you explain the purpose of your visit in more detail?"},
+  {id:'din-1', domain:'dining', tier:'Foundation', title:'Ordering Your First Meal Abroad', character:'Restaurant server', setting:'You have just sat down at a restaurant and the server is ready to take your order.', opening:"Welcome! Can I start you off with something to drink, or are you ready to order?"},
+  {id:'din-2', domain:'dining', tier:'Intermediate', title:'Asking for Recommendations and Substitutions', character:'Restaurant server', setting:"You have a mild allergy and want a dish adjusted, but you're not sure what's safe on the menu.", opening:"Everything on the menu is great tonight — is there anything you're avoiding, or any allergies I should know about?"},
+  {id:'din-3', domain:'dining', tier:'Fluent', title:'Handling a Billing Mistake Diplomatically', character:'Restaurant manager', setting:'Your bill includes an item you never ordered, and you need to raise it without an argument.', opening:"Hi, I heard there might be an issue with the bill — what seems to be the problem?"},
+  {id:'int-1', domain:'interview', tier:'Foundation', title:"Answering 'Tell Me About Yourself'", character:'Hiring manager', setting:'The interview has just started and this is the opening question.', opening:"Thanks for coming in. Let's start simple — tell me a bit about yourself."},
+  {id:'int-2', domain:'interview', tier:'Intermediate', title:'Describing a Challenge You Overcame', character:'Hiring manager', setting:'Midway through the interview, focused on a behavioral question.', opening:"Can you walk me through a time you faced a real challenge at work and how you handled it?"},
+  {id:'int-3', domain:'interview', tier:'Fluent', title:'Negotiating Salary and Start Date', character:'HR director', setting:"You've received an offer and need to negotiate terms professionally.", opening:"We'd love to have you — here's our offer. What are your thoughts on the package and timing?"},
+  {id:'sml-1', domain:'smalltalk', tier:'Foundation', title:'Chatting While Waiting for a Bus', character:'A stranger at the bus stop', setting:'You are both waiting and the stranger has just started a casual conversation.', opening:"This bus is always late, isn't it? Are you heading into town too?"},
+  {id:'sml-2', domain:'smalltalk', tier:'Intermediate', title:'Catching Up with a Colleague After a Trip', character:'Your colleague, back from leave', setting:'You run into a colleague in the office kitchen after their vacation.', opening:"Hey! I'm back — you would not believe the trip I had. How's everything been here?"},
+  {id:'sml-3', domain:'smalltalk', tier:'Fluent', title:'Navigating a Sensitive Topic Politely at a Dinner Party', character:'A fellow dinner guest', setting:"Conversation has drifted toward a topic you'd rather steer away from, without being rude.", opening:"So what do you really think about all that? I'd love to hear your take."}
+];
+
+let state = {
+  domain:'all', tier:'all', query:'',
+  activeScenario:null,
+  history:[], // {role:'char'|'user', text}
+  errorTally:{},
+  exchangeCount:0,
+  sessionEnded:false
+};
+
+// ---------- storage helpers ----------
+async function loadLog(){
+  try{
+    const r = await window.storage.get('coaching-log', false);
+    return r ? JSON.parse(r.value) : [];
+  }catch(e){ return []; }
+}
+async function saveLog(entries){
+  try{ await window.storage.set('coaching-log', JSON.stringify(entries), false); }
+  catch(e){ console.error('storage save failed', e); }
+}
+
+// ---------- navigation ----------
+const tabLauncher = document.getElementById('tab-launcher');
+const tabLog = document.getElementById('tab-log');
+const viewLauncher = document.getElementById('view-launcher');
+const viewSession = document.getElementById('view-session');
+const viewLog = document.getElementById('view-log');
+
+function showView(name){
+  viewLauncher.style.display = name==='launcher' ? '' : 'none';
+  viewSession.style.display = name==='session' ? '' : 'none';
+  viewLog.style.display = name==='log' ? '' : 'none';
+  tabLauncher.classList.toggle('active', name==='launcher' || name==='session');
+  tabLog.classList.toggle('active', name==='log');
+  if(name==='log') renderLog();
+}
+tabLauncher.addEventListener('click', ()=> showView(state.activeScenario && !state.sessionEnded ? 'session' : 'launcher'));
+tabLog.addEventListener('click', ()=> showView('log'));
+
+// ---------- launcher rendering ----------
+function domainCount(id){
+  return SCENARIOS.filter(s => (id==='all'||s.domain===id) && (state.tier==='all'||s.tier===state.tier)).length;
+}
+function tierCount(t){
+  return SCENARIOS.filter(s => (t==='all'||s.tier===t) && (state.domain==='all'||s.domain===state.domain)).length;
+}
+function renderChips(){
+  const dWrap = document.getElementById('domain-chips');
+  dWrap.innerHTML = '';
+  const allChip = mkChip('All domains', state.domain==='all', domainCount('all'), ()=>{state.domain='all'; renderChips(); renderGrid();});
+  dWrap.appendChild(allChip);
+  DOMAINS.forEach(d=>{
+    dWrap.appendChild(mkChip(d.name, state.domain===d.id, domainCount(d.id), ()=>{state.domain=d.id; renderChips(); renderGrid();}));
+  });
+
+  const tWrap = document.getElementById('tier-chips');
+  tWrap.innerHTML = '';
+  tWrap.appendChild(mkChip('All tiers', state.tier==='all', tierCount('all'), ()=>{state.tier='all'; renderChips(); renderGrid();}));
+  TIERS.forEach(t=>{
+    tWrap.appendChild(mkChip(t, state.tier===t, tierCount(t), ()=>{state.tier=t; renderChips(); renderGrid();}));
+  });
+}
+function mkChip(label, active, count, onClick){
+  const b = document.createElement('button');
+  b.className = 'chip' + (active?' active':'');
+  b.innerHTML = label + ' <span class="count">'+count+'</span>';
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function renderGrid(){
+  const grid = document.getElementById('scenario-grid');
+  const empty = document.getElementById('empty-state');
+  const q = state.query.trim().toLowerCase();
+  const filtered = SCENARIOS.filter(s=>{
+    if(state.domain!=='all' && s.domain!==state.domain) return false;
+    if(state.tier!=='all' && s.tier!==state.tier) return false;
+    if(q && !(s.title.toLowerCase().includes(q) || s.setting.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  grid.innerHTML = '';
+  empty.style.display = filtered.length ? 'none' : '';
+  filtered.forEach(s=>{
+    const domainName = DOMAINS.find(d=>d.id===s.domain).name;
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="tags">
+        <span class="tag domain">${domainName}</span>
+        <span class="tag tier-${s.tier}">${s.tier}</span>
+      </div>
+      <h3>${s.title}</h3>
+      <div class="character">Roleplay partner: ${s.character}</div>
+      <div class="go">Start session →</div>
+    `;
+    card.addEventListener('click', ()=> startSession(s));
+    grid.appendChild(card);
+  });
+}
+document.getElementById('search').addEventListener('input', (e)=>{
+  state.query = e.target.value;
+  renderGrid();
+});
+
+// ---------- session ----------
+function startSession(scenario){
+  state.activeScenario = scenario;
+  state.history = [{role:'char', text:scenario.opening}];
+  state.errorTally = {};
+  state.exchangeCount = 0;
+  state.sessionEnded = false;
+
+  const domainName = DOMAINS.find(d=>d.id===scenario.domain).name;
+  document.getElementById('s-meta').textContent = domainName + ' · ' + scenario.tier;
+  document.getElementById('s-title').textContent = scenario.title;
+  document.getElementById('s-setting').textContent = scenario.setting + ' You are talking with ' + scenario.character + '.';
+  document.getElementById('focus-list').innerHTML = '<div class="placeholder">Corrections will appear here as you go.</div>';
+  document.getElementById('summary-wrap').innerHTML = '';
+  document.getElementById('end-session').style.display = '';
+  document.querySelector('.composer').style.display = '';
+
+  renderTranscript();
+  showView('session');
+  document.getElementById('user-input').focus();
+}
+
+function renderTranscript(){
+  const t = document.getElementById('transcript');
+  t.innerHTML = '';
+  state.history.forEach(item=>{
+    if(item.role==='char'){
+      const b = document.createElement('div');
+      b.className = 'bubble char';
+      b.innerHTML = '<span class="who">'+state.activeScenario.character+'</span>' + escapeHtml(item.text);
+      t.appendChild(b);
+    } else {
+      const b = document.createElement('div');
+      b.className = 'bubble user';
+      b.innerHTML = '<span class="who">You</span>' + escapeHtml(item.text);
+      t.appendChild(b);
+      if(item.corrections && item.corrections.length){
+        item.corrections.forEach(c=>{
+          const cd = document.createElement('div');
+          cd.className = 'correction';
+          cd.innerHTML = `
+            <div class="row"><span class="label">Better:</span> <span class="fixed">${escapeHtml(c.corrected)}</span></div>
+            <div class="row why">${escapeHtml(c.explanation)}</div>
+            <span class="etag">${escapeHtml(c.error_type)}</span>
+          `;
+          t.appendChild(cd);
+        });
+      } else if(item.checked){
+        const cd = document.createElement('div');
+        cd.className = 'clean-tag';
+        cd.textContent = 'No corrections — nicely put.';
+        t.appendChild(cd);
+      }
+    }
+  });
+  t.scrollTop = t.scrollHeight;
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function renderFocusList(){
+  const wrap = document.getElementById('focus-list');
+  const entries = Object.entries(state.errorTally).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){
+    wrap.innerHTML = '<div class="placeholder">Corrections will appear here as you go.</div>';
+    return;
+  }
+  wrap.innerHTML = entries.map(([type,n]) =>
+    `<div class="focus-item"><span>${escapeHtml(type)}</span><span class="n">${n}</span></div>`
+  ).join('');
+}
+
+async function callCoach(userText){
+  const scenario = state.activeScenario;
+  const dialogueSoFar = state.history.map(h =>
+    h.role==='char' ? `${scenario.character}: ${h.text}` : `Learner: ${h.text}`
+  ).join('\n');
+
+  const systemPrompt = `You are running a live English-practice roleplay for an adult learner.
+Scenario: "${scenario.title}" (${scenario.tier} level). Setting: ${scenario.setting}
+You play the character "${scenario.character}" — stay in character, respond naturally in 1-3 sentences, and keep the situation moving toward a realistic resolution appropriate for the ${scenario.tier} level.
+You are also the learner's English coach: review ONLY the learner's most recent message for English errors (grammar, vocabulary, word order, prepositions, verb tense, articles).
+Respond with ONLY valid JSON, no markdown fences, no commentary, in exactly this shape:
+{"character_reply": "string, in character", "corrections": [{"original":"string fragment from learner's message","corrected":"string, corrected version","explanation":"one short plain-language sentence","error_type":"grammar|vocabulary|word-order|preposition|verb-tense|article|other"}]}
+If the learner's message has no notable errors, return "corrections": [].
+Conversation so far:
+${dialogueSoFar}
+Learner: ${userText}`;
+
+  const response = await fetch("/api/chat", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ prompt: systemPrompt })
+  });
+  const data = await response.json();
+  if(data.error){ throw new Error(data.error); }
+  const raw = (data.content || []).map(b=>b.text||'').join('');
+  const clean = raw.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+const sendBtn = document.getElementById('send-btn');
+const userInput = document.getElementById('user-input');
+
+async function handleSend(){
+  const text = userInput.value.trim();
+  if(!text || state.sessionEnded) return;
+  userInput.value = '';
+  sendBtn.disabled = true;
+
+  state.history.push({role:'user', text, checked:false, corrections:null});
+  renderTranscript();
+
+  const t = document.getElementById('transcript');
+  const thinking = document.createElement('div');
+  thinking.className = 'thinking';
+  thinking.textContent = state.activeScenario.character + ' is responding…';
+  t.appendChild(thinking);
+  t.scrollTop = t.scrollHeight;
+
+  try{
+    const result = await callCoach(text);
+    thinking.remove();
+
+    const lastUser = state.history[state.history.length-1];
+    lastUser.checked = true;
+    lastUser.corrections = result.corrections || [];
+    lastUser.corrections.forEach(c=>{
+      state.errorTally[c.error_type] = (state.errorTally[c.error_type]||0) + 1;
+    });
+    state.exchangeCount += 1;
+
+    state.history.push({role:'char', text: result.character_reply});
+    renderTranscript();
+    renderFocusList();
+  }catch(e){
+    thinking.textContent = "Something went wrong reaching the coach — please try sending that again.";
+    console.error(e);
+  }
+  sendBtn.disabled = false;
+  userInput.focus();
+}
+sendBtn.addEventListener('click', handleSend);
+userInput.addEventListener('keydown', e=>{ if(e.key==='Enter') handleSend(); });
+
+document.getElementById('end-session').addEventListener('click', endSession);
+
+async function endSession(){
+  state.sessionEnded = true;
+  document.querySelector('.composer').style.display = 'none';
+  document.getElementById('end-session').style.display = 'none';
+
+  const entries = Object.entries(state.errorTally).sort((a,b)=>b[1]-a[1]);
+  const topType = entries.length ? entries[0][0] : null;
+  const tip = topType
+    ? tipFor(topType)
+    : "Clean session — no recurring error patterns. Try a harder tier next time to keep stretching.";
+
+  const summary = {
+    id: 'sess-' + Date.now(),
+    scenarioTitle: state.activeScenario.title,
+    domain: DOMAINS.find(d=>d.id===state.activeScenario.domain).name,
+    tier: state.activeScenario.tier,
+    date: new Date().toISOString(),
+    exchanges: state.exchangeCount,
+    errorTally: state.errorTally,
+    topType,
+    tip
+  };
+
+  const log = await loadLog();
+  log.unshift(summary);
+  await saveLog(log);
+
+  renderSummary(summary);
+}
+
+function tipFor(type){
+  const tips = {
+    'grammar': "Grammar slips clustered this session. Before your next one, read your last few replies out loud slowly — most grammar errors are easier to hear than to see.",
+    'vocabulary': "A few word choices didn't quite fit the context. Try noting one new word per session and using it deliberately in the next scenario.",
+    'word-order': "Word order tripped you up a couple of times. In English, try locking in Subject → Verb → Object as your default, then adjust from there.",
+    'preposition': "Prepositions were the main pattern here — they're rarely logical, so it's worth drilling the 3-4 that came up today specifically.",
+    'verb-tense': "Verb tense shifted more than once. Before replying, take half a second to decide: is this happening now, already happened, or about to happen?",
+    'article': "Articles ('a', 'an', 'the') were the recurring miss. A rough rule: 'the' for something specific both of you know, 'a/an' for something general.",
+    'other': "A mix of small issues came up — nothing dominant yet. Keep practicing at this tier before moving up."
+  };
+  return tips[type] || tips['other'];
+}
+
+function renderSummary(summary){
+  const wrap = document.getElementById('summary-wrap');
+  const entries = Object.entries(summary.errorTally).sort((a,b)=>b[1]-a[1]);
+  wrap.innerHTML = `
+    <div class="summary-card">
+      <h3>Session report</h3>
+      <div class="meta">${summary.domain} · ${summary.tier} · ${summary.scenarioTitle}</div>
+      <div class="stat-row">
+        <div class="stat"><div class="num">${summary.exchanges}</div><div class="lbl">Exchanges</div></div>
+        <div class="stat"><div class="num">${entries.reduce((a,[,n])=>a+n,0)}</div><div class="lbl">Corrections given</div></div>
+        <div class="stat"><div class="num">${entries.length ? entries[0][0] : '—'}</div><div class="lbl">Top focus area</div></div>
+      </div>
+      <div class="tip-box">${escapeHtml(summary.tip)}</div>
+      <div class="summary-actions">
+        <button class="primary" id="new-session-btn">Start another session</button>
+        <button id="view-log-btn">View coaching log</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('new-session-btn').addEventListener('click', ()=> showView('launcher'));
+  document.getElementById('view-log-btn').addEventListener('click', ()=> showView('log'));
+}
+
+// ---------- log view ----------
+async function renderLog(){
+  const list = document.getElementById('log-list');
+  const empty = document.getElementById('log-empty');
+  const log = await loadLog();
+  list.innerHTML = '';
+  empty.style.display = log.length ? 'none' : '';
+  log.forEach(s=>{
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    const d = new Date(s.date);
+    item.innerHTML = `
+      <div>
+        <div class="title">${escapeHtml(s.scenarioTitle)}</div>
+        <div class="date">${s.domain} · ${s.tier} · ${d.toLocaleDateString()}</div>
+      </div>
+      <div class="topfocus">${s.topType ? 'Top focus: ' + escapeHtml(s.topType) : 'No recurring errors'}</div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+// ---------- init ----------
+renderChips();
+renderGrid();
+</script>
+</body>
+</html>
