@@ -125,6 +125,15 @@
   .log-item .title{font-weight:500;}
   .log-item .date{font-size:0.76rem;color:var(--muted);}
   .log-item .topfocus{font-size:0.8rem;color:#9A6420;}
+
+  /* ---------- explanation language ---------- */
+  header.top{flex-wrap:wrap;gap:12px;}
+  .header-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .lang-pick{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted);}
+  .lang-pick select{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 10px;border-radius:8px;font-size:0.84rem;font-family:inherit;}
+  .lang-pick select:focus-visible{outline:2px solid var(--teal);outline-offset:1px;}
+  .correction .why[dir="rtl"]{text-align:right;}
+  .tip-box[dir="rtl"]{border-left:none;border-right:3px solid var(--teal);border-radius:6px 0 0 6px;text-align:right;}
 </style>
 </head>
 <body>
@@ -136,10 +145,22 @@
       <span class="mark">ASKLANDI 3.0</span>
       <span class="sub">AI English Coach — Landi Institute</span>
     </div>
-    <nav class="tabs">
-      <button id="tab-launcher" class="active">Practice</button>
-      <button id="tab-log">Coaching Log</button>
-    </nav>
+    <div class="header-right">
+      <label class="lang-pick">Explain corrections in
+        <select id="lang-select" aria-label="Language for explanations">
+          <option value="en">English</option>
+          <option value="zh">中文 (简体)</option>
+          <option value="id">Bahasa Indonesia</option>
+          <option value="ms">Bahasa Melayu</option>
+          <option value="sw">Kiswahili</option>
+          <option value="ar">العربية</option>
+        </select>
+      </label>
+      <nav class="tabs">
+        <button id="tab-launcher" class="active">Practice</button>
+        <button id="tab-log">Coaching Log</button>
+      </nav>
+    </div>
   </header>
 
   <main id="view-launcher">
@@ -241,14 +262,51 @@ let state = {
 // ---------- storage helpers ----------
 async function loadLog(){
   try{
-    const r = await window.storage.get('coaching-log', false);
-    return r ? JSON.parse(r.value) : [];
+    if(window.storage && window.storage.get){
+      const r = await window.storage.get('coaching-log', false);
+      if(r) return JSON.parse(r.value);
+    }
+  }catch(e){}
+  try{
+    const raw = localStorage.getItem('asklandi-coaching-log');
+    return raw ? JSON.parse(raw) : [];
   }catch(e){ return []; }
 }
 async function saveLog(entries){
-  try{ await window.storage.set('coaching-log', JSON.stringify(entries), false); }
-  catch(e){ console.error('storage save failed', e); }
+  try{
+    if(window.storage && window.storage.set){
+      await window.storage.set('coaching-log', JSON.stringify(entries), false);
+      return;
+    }
+  }catch(e){}
+  try{ localStorage.setItem('asklandi-coaching-log', JSON.stringify(entries.slice(0,200))); }
+  catch(e){ console.error('log save failed', e); }
 }
+
+// ---------- explanation language ----------
+const LANGS = {
+  en:{name:'English', dir:'ltr'},
+  zh:{name:'Chinese', dir:'ltr'},
+  id:{name:'Bahasa Indonesia', dir:'ltr'},
+  ms:{name:'Bahasa Melayu', dir:'ltr'},
+  sw:{name:'Kiswahili', dir:'ltr'},
+  ar:{name:'Arabic', dir:'rtl'}
+};
+function initialLang(){
+  try{
+    const saved = localStorage.getItem('asklandi-lang');
+    if(saved && LANGS[saved]) return saved;
+  }catch(e){}
+  const guess = ((navigator.language||'en').toLowerCase()).slice(0,2);
+  return LANGS[guess] ? guess : 'en';
+}
+state.lang = initialLang();
+const langSelect = document.getElementById('lang-select');
+langSelect.value = state.lang;
+langSelect.addEventListener('change', ()=>{
+  state.lang = langSelect.value;
+  try{ localStorage.setItem('asklandi-lang', state.lang); }catch(e){}
+});
 
 // ---------- navigation ----------
 const tabLauncher = document.getElementById('tab-launcher');
@@ -375,7 +433,7 @@ function renderTranscript(){
           cd.className = 'correction';
           cd.innerHTML = `
             <div class="row"><span class="label">Better:</span> <span class="fixed">${escapeHtml(c.corrected)}</span></div>
-            <div class="row why">${escapeHtml(c.explanation)}</div>
+            <div class="row why" dir="${(LANGS[c.lang]||LANGS.en).dir}">${escapeHtml(c.explanation)}</div>
             <span class="etag">${escapeHtml(c.error_type)}</span>
           `;
           t.appendChild(cd);
@@ -406,33 +464,49 @@ function renderFocusList(){
   ).join('');
 }
 
-async function callCoach(userText){
+async function callCoach(userText, lang){
   const scenario = state.activeScenario;
-  const dialogueSoFar = state.history.map(h =>
-    h.role==='char' ? `${scenario.character}: ${h.text}` : `Learner: ${h.text}`
-  ).join('\n');
-
-  const systemPrompt = `You are running a live English-practice roleplay for an adult learner.
-Scenario: "${scenario.title}" (${scenario.tier} level). Setting: ${scenario.setting}
-You play the character "${scenario.character}" — stay in character, respond naturally in 1-3 sentences, and keep the situation moving toward a realistic resolution appropriate for the ${scenario.tier} level.
-You are also the learner's English coach: review ONLY the learner's most recent message for English errors (grammar, vocabulary, word order, prepositions, verb tense, articles).
-Respond with ONLY valid JSON, no markdown fences, no commentary, in exactly this shape:
-{"character_reply": "string, in character", "corrections": [{"original":"string fragment from learner's message","corrected":"string, corrected version","explanation":"one short plain-language sentence","error_type":"grammar|vocabulary|word-order|preposition|verb-tense|article|other"}]}
-If the learner's message has no notable errors, return "corrections": [].
-Conversation so far:
-${dialogueSoFar}
-Learner: ${userText}`;
+  // history without the message being sent right now (sent separately as userText)
+  const earlier = state.history.slice(0, -1).slice(-14).map(h => ({
+    role: h.role === 'char' ? 'char' : 'user',
+    text: h.text
+  }));
 
   const response = await fetch("/api/chat", {
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ prompt: systemPrompt })
+    body: JSON.stringify({
+      mode: 'coach',
+      language: lang,
+      scenario: {
+        title: scenario.title,
+        tier: scenario.tier,
+        setting: scenario.setting,
+        character: scenario.character
+      },
+      history: earlier,
+      userText
+    })
   });
-  const data = await response.json();
-  if(data.error){ throw new Error(data.error); }
-  const raw = (data.content || []).map(b=>b.text||'').join('');
-  const clean = raw.replace(/```json|```/g,'').trim();
-  return JSON.parse(clean);
+  const data = await response.json().catch(()=>({error:'bad_response'}));
+  if(!response.ok || data.error){
+    const err = new Error(data.message || data.error || 'request failed');
+    err.code = data.code || data.error;
+    throw err;
+  }
+  return data;
+}
+
+async function translateTip(tip, lang){
+  try{
+    const response = await fetch("/api/chat", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({mode:'translate', language: lang, text: tip})
+    });
+    const data = await response.json();
+    return (response.ok && data.text) ? data.text : null;
+  }catch(e){ return null; }
 }
 
 const sendBtn = document.getElementById('send-btn');
@@ -454,13 +528,14 @@ async function handleSend(){
   t.appendChild(thinking);
   t.scrollTop = t.scrollHeight;
 
+  const langAtCall = state.lang;
   try{
-    const result = await callCoach(text);
+    const result = await callCoach(text, langAtCall);
     thinking.remove();
 
     const lastUser = state.history[state.history.length-1];
     lastUser.checked = true;
-    lastUser.corrections = result.corrections || [];
+    lastUser.corrections = (result.corrections || []).map(c => Object.assign({}, c, {lang: langAtCall}));
     lastUser.corrections.forEach(c=>{
       state.errorTally[c.error_type] = (state.errorTally[c.error_type]||0) + 1;
     });
@@ -470,7 +545,9 @@ async function handleSend(){
     renderTranscript();
     renderFocusList();
   }catch(e){
-    thinking.textContent = "Something went wrong reaching the coach — please try sending that again.";
+    thinking.textContent = (e && (e.code === 'rate_limited' || e.code === 'busy'))
+      ? e.message
+      : "Something went wrong reaching the coach — please try sending that again.";
     console.error(e);
   }
   sendBtn.disabled = false;
@@ -509,6 +586,15 @@ async function endSession(){
   await saveLog(log);
 
   renderSummary(summary);
+
+  if(state.lang !== 'en'){
+    const translated = await translateTip(tip, state.lang);
+    const box = document.querySelector('#summary-wrap .tip-box');
+    if(translated && box){
+      box.textContent = translated;
+      box.setAttribute('dir', LANGS[state.lang].dir);
+    }
+  }
 }
 
 function tipFor(type){
