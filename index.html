@@ -42,9 +42,14 @@
   .hero p{color:var(--muted);max-width:520px;line-height:1.55;margin:0;}
 
   .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:28px 0 8px;}
-  .search{flex:1;min-width:220px;position:relative;}
-  .search input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:0.9rem;}
-  .search input:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .search{flex:1;min-width:220px;position:relative;display:flex;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:0 6px 0 16px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+  .search:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(27,107,99,0.15);}
+  .search .s-icon{flex:none;width:20px;height:20px;color:var(--teal-deep);opacity:.8;}
+  .search input{flex:1;min-width:0;padding:13px 10px;border:none;background:transparent;font-size:1rem;font-family:inherit;color:inherit;}
+  .search input:focus{outline:none;}
+  .search input::placeholder{opacity:.7;}
+  .search .s-clear{flex:none;width:30px;height:30px;border:none;border-radius:50%;background:#E8E4D8;color:#555;font-size:1.1rem;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;}
+  .search.has-text .s-clear{display:flex;}
 
   .chiprow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
   .chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 13px;border-radius:20px;font-size:0.82rem;}
@@ -92,11 +97,14 @@
   .correction .etag{display:inline-block;margin-top:6px;font-size:0.68rem;background:#F1DFC2;color:#7A5518;padding:2px 8px;border-radius:10px;}
   .clean-tag{align-self:flex-end;font-size:0.76rem;color:var(--teal-deep);}
 
-  .composer{display:flex;gap:8px;margin-top:16px;}
-  .composer input{flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:0.92rem;}
-  .composer input:focus{outline:2px solid var(--teal);outline-offset:1px;}
-  .composer button{background:var(--teal-deep);color:#fff;border:none;padding:0 20px;border-radius:8px;font-size:0.88rem;}
-  .composer button:disabled{opacity:0.5;cursor:default;}
+  .composer{display:flex;align-items:center;gap:8px;margin-top:16px;padding:6px 6px 6px 18px;background:#fff;border:1px solid var(--line);border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+  .composer:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(27,107,99,0.15);}
+  .composer input{flex:1;min-width:0;padding:10px 0;border:none;background:transparent;font-size:1rem;font-family:inherit;color:inherit;}
+  .composer input:focus{outline:none;}
+  .composer button{flex:none;width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--teal-deep);color:#fff;border:none;border-radius:50%;cursor:pointer;transition:transform .15s ease,opacity .15s ease;}
+  .composer button:hover:not(:disabled){transform:scale(1.07);}
+  .composer button svg{width:20px;height:20px;}
+  .composer button:disabled{opacity:0.45;cursor:default;}
 
   .sidebar h4{font-size:0.75rem;text-transform:none;letter-spacing:0.02em;color:var(--muted);margin:0 0 10px;font-weight:600;}
   .sidebar .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:16px;}
@@ -171,7 +179,9 @@
 
     <div class="controls">
       <div class="search">
-        <input id="search" type="text" placeholder="Search scenarios — e.g. interview, refund, small talk">
+        <svg class="s-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="search" type="text" placeholder="Search — e.g. interview, refund, small talk" aria-label="Search scenarios" autocomplete="off">
+        <button type="button" class="s-clear" id="search-clear" aria-label="Clear search">&times;</button>
       </div>
     </div>
 
@@ -196,8 +206,8 @@
       <div>
         <div class="transcript" id="transcript"></div>
         <div class="composer">
-          <input id="user-input" type="text" placeholder="Type your reply in English…" autocomplete="off">
-          <button id="send-btn">Send</button>
+          <input id="user-input" type="text" placeholder="Write your reply in English…" aria-label="Your reply" autocomplete="off">
+          <button id="send-btn" type="button" aria-label="Send message" title="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></button>
         </div>
       </div>
       <div class="sidebar">
@@ -386,9 +396,19 @@ function renderGrid(){
     grid.appendChild(card);
   });
 }
-document.getElementById('search').addEventListener('input', (e)=>{
+const searchBox = document.getElementById('search');
+const searchWrap = searchBox.parentElement;
+searchBox.addEventListener('input', (e)=>{
   state.query = e.target.value;
+  searchWrap.classList.toggle('has-text', !!e.target.value);
   renderGrid();
+});
+document.getElementById('search-clear').addEventListener('click', ()=>{
+  searchBox.value = '';
+  state.query = '';
+  searchWrap.classList.remove('has-text');
+  renderGrid();
+  searchBox.focus();
 });
 
 // ---------- session ----------
@@ -432,6 +452,7 @@ function renderTranscript(){
           const cd = document.createElement('div');
           cd.className = 'correction';
           cd.innerHTML = `
+            ${c.original && c.original !== c.corrected ? `<div class="row"><span class="label">You wrote:</span> <span style="text-decoration:line-through;opacity:.7">${escapeHtml(c.original)}</span></div>` : ''}
             <div class="row"><span class="label">Better:</span> <span class="fixed">${escapeHtml(c.corrected)}</span></div>
             <div class="row why" dir="${(LANGS[c.lang]||LANGS.en).dir}">${escapeHtml(c.explanation)}</div>
             <span class="etag">${escapeHtml(c.error_type)}</span>
@@ -545,7 +566,7 @@ async function handleSend(){
     renderTranscript();
     renderFocusList();
   }catch(e){
-    thinking.textContent = (e && (e.code === 'rate_limited' || e.code === 'busy'))
+    thinking.textContent = (e && (e.code === 'rate_limited' || e.code === 'busy' || e.code === 'limit_reached'))
       ? e.message
       : "Something went wrong reaching the coach — please try sending that again.";
     console.error(e);
@@ -600,6 +621,7 @@ async function endSession(){
 function tipFor(type){
   const tips = {
     'grammar': "Grammar slips clustered this session. Before your next one, read your last few replies out loud slowly — most grammar errors are easier to hear than to see.",
+    'spelling': "Spelling slips came up a few times. Before sending, glance over each word once — and keep a short list of the words you misspell most, to practise them.",
     'vocabulary': "A few word choices didn't quite fit the context. Try noting one new word per session and using it deliberately in the next scenario.",
     'word-order': "Word order tripped you up a couple of times. In English, try locking in Subject → Verb → Object as your default, then adjust from there.",
     'preposition': "Prepositions were the main pattern here — they're rarely logical, so it's worth drilling the 3-4 that came up today specifically.",
