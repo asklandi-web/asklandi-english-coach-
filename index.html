@@ -142,6 +142,31 @@
   .lang-pick select:focus-visible{outline:2px solid var(--teal);outline-offset:1px;}
   .correction .why[dir="rtl"]{text-align:right;}
   .tip-box[dir="rtl"]{border-left:none;border-right:3px solid var(--teal);border-radius:6px 0 0 6px;text-align:right;}
+
+  /* ---------- accounts ---------- */
+  .acct{display:flex;align-items:center;gap:8px;font-size:0.82rem;}
+  .acct-btn{border:1px solid var(--teal-deep);background:none;color:var(--teal-deep);padding:7px 14px;border-radius:999px;font-size:0.84rem;}
+  .acct-btn.solid{background:var(--teal-deep);color:#fff;}
+  .acct .who{color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .modal-back{position:fixed;inset:0;background:rgba(19,42,44,0.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50;}
+  .modal-back.open{display:flex;}
+  .modal{background:var(--panel);border-radius:14px;max-width:400px;width:100%;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,0.25);position:relative;}
+  .modal h3{margin:0 0 4px;font-size:1.3rem;}
+  .modal .lead{color:var(--muted);font-size:0.86rem;margin:0 0 16px;line-height:1.5;}
+  .modal .x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:1.5rem;color:var(--muted);line-height:1;}
+  .modal .mtabs{display:flex;gap:4px;margin-bottom:16px;background:var(--paper);padding:4px;border-radius:999px;}
+  .modal .mtabs button{flex:1;border:none;background:none;padding:8px;border-radius:999px;font-size:0.86rem;color:var(--muted);}
+  .modal .mtabs button.active{background:var(--teal-deep);color:#fff;}
+  .modal label{display:block;font-size:0.8rem;color:var(--muted);margin:10px 0 4px;}
+  .modal input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:1rem;background:#fff;}
+  .modal input:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .modal .msg{min-height:20px;font-size:0.84rem;margin:12px 0 4px;color:#9A3412;line-height:1.4;}
+  .modal .msg.ok{color:var(--teal-deep);}
+  .modal .go-btn{width:100%;padding:12px;border:none;border-radius:999px;background:var(--teal-deep);color:#fff;font-size:0.95rem;margin-top:6px;}
+  .modal .go-btn:disabled{opacity:0.55;cursor:default;}
+  .modal .fine{font-size:0.74rem;color:var(--muted);margin:12px 0 0;line-height:1.45;}
+  .acct-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:0.86rem;color:var(--muted);margin-top:20px;}
+  .acct-note button{border:1px solid var(--teal-deep);background:none;color:var(--teal-deep);padding:5px 12px;border-radius:999px;font-size:0.82rem;}
 </style>
 </head>
 <body>
@@ -168,6 +193,7 @@
         <button id="tab-launcher" class="active">Practice</button>
         <button id="tab-log">Coaching Log</button>
       </nav>
+      <div class="acct" id="acct-area"></div>
     </div>
   </header>
 
@@ -226,12 +252,34 @@
       <h1 style="font-size:1.8rem;">Coaching log</h1>
       <p>A record of every session, so patterns across scenarios are easy to spot.</p>
     </section>
+    <div class="acct-note" id="log-acct-note"></div>
     <div class="log-list" id="log-list"></div>
     <div class="empty" id="log-empty" style="display:none;">No sessions yet — finish a practice session and it'll show up here.</div>
   </main>
 
 </div>
 
+
+<div class="modal-back" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+  <div class="modal">
+    <button class="x" id="auth-close" aria-label="Close">&times;</button>
+    <h3 id="auth-title">Save your progress</h3>
+    <p class="lead">Make a free account so your coaching log follows you to any phone or computer.</p>
+    <div class="mtabs">
+      <button type="button" id="mt-in" class="active">Sign in</button>
+      <button type="button" id="mt-up">Create account</button>
+    </div>
+    <form id="auth-form" novalidate>
+      <label for="auth-email">Email</label>
+      <input id="auth-email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="you@example.com">
+      <label for="auth-pass">Password</label>
+      <input id="auth-pass" type="password" autocomplete="current-password" placeholder="At least 8 characters">
+      <div class="msg" id="auth-msg" role="status"></div>
+      <button class="go-btn" id="auth-go" type="submit">Sign in</button>
+    </form>
+    <p class="fine">Your practice still works without an account. If you forget your password, please ask your teacher or Landi Institute to reset it.</p>
+  </div>
+</div>
 <script>
 const DOMAINS = [
   {id:'business', name:'Business English'},
@@ -270,7 +318,7 @@ let state = {
 };
 
 // ---------- storage helpers ----------
-async function loadLog(){
+async function loadLocalLog(){
   try{
     if(window.storage && window.storage.get){
       const r = await window.storage.get('coaching-log', false);
@@ -282,7 +330,7 @@ async function loadLog(){
     return raw ? JSON.parse(raw) : [];
   }catch(e){ return []; }
 }
-async function saveLog(entries){
+async function saveLocalLog(entries){
   try{
     if(window.storage && window.storage.set){
       await window.storage.set('coaching-log', JSON.stringify(entries), false);
@@ -292,6 +340,203 @@ async function saveLog(entries){
   try{ localStorage.setItem('asklandi-coaching-log', JSON.stringify(entries.slice(0,200))); }
   catch(e){ console.error('log save failed', e); }
 }
+
+
+// ---------- accounts (Supabase) ----------
+const SB_URL = 'https://xzzztssenizcbkguomps.supabase.co';
+const SB_KEY = 'sb_publishable_Dxrop1_IC3McaiFX5OyGLA_TigigNcn';
+const AUTH_STORE = 'asklandi-auth';
+let auth = null; // {access_token, refresh_token, expires_at, email, id}
+let authMode = 'in';
+
+function readAuth(){
+  try{ const r = localStorage.getItem(AUTH_STORE); auth = r ? JSON.parse(r) : null; }
+  catch(e){ auth = null; }
+}
+function writeAuth(a){
+  auth = a;
+  try{ if(a) localStorage.setItem(AUTH_STORE, JSON.stringify(a)); else localStorage.removeItem(AUTH_STORE); }
+  catch(e){}
+}
+function sessionFrom(data){
+  if(!data || !data.access_token) return null;
+  const now = Math.floor(Date.now()/1000);
+  return {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: data.expires_at || (now + (data.expires_in || 3600)),
+    email: (data.user && data.user.email) || (auth && auth.email) || '',
+    id: (data.user && data.user.id) || (auth && auth.id) || ''
+  };
+}
+function friendlyAuthError(status, body){
+  const raw = ((body && (body.msg || body.message || body.error_description || body.error)) || '').toString();
+  const low = raw.toLowerCase();
+  if(low.includes('invalid login')) return 'That email or password is not correct.';
+  if(low.includes('already registered') || low.includes('already been registered')) return 'This email already has an account. Tap "Sign in" instead.';
+  if(low.includes('password') && (low.includes('short') || low.includes('least') || low.includes('weak'))) return 'Please choose a longer password (at least 8 characters).';
+  if(low.includes('valid email') || low.includes('invalid email') || low.includes('unable to validate email')) return 'Please check the email address.';
+  if(status === 429 || low.includes('rate limit')) return 'Too many attempts. Please wait a few minutes and try again.';
+  if(low.includes('signups not allowed')) return 'New accounts are closed right now. Please contact Landi Institute.';
+  return 'Something went wrong. Please try again.';
+}
+async function authCall(path, payload){
+  let res;
+  try{
+    res = await fetch(SB_URL + path, {
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+  }catch(e){
+    const err = new Error('Could not reach the server. Please check your internet connection.');
+    err.friendly = true; throw err;
+  }
+  const body = await res.json().catch(()=>({}));
+  if(!res.ok){
+    const err = new Error(friendlyAuthError(res.status, body));
+    err.friendly = true; throw err;
+  }
+  return body;
+}
+async function getToken(){
+  if(!auth) return null;
+  const now = Math.floor(Date.now()/1000);
+  if(auth.expires_at - 60 > now) return auth.access_token;
+  try{
+    const data = await authCall('/auth/v1/token?grant_type=refresh_token', {refresh_token: auth.refresh_token});
+    const next = sessionFrom(data);
+    if(next){ writeAuth(next); return next.access_token; }
+  }catch(e){
+    writeAuth(null); renderAccount();
+  }
+  return null;
+}
+async function dbFetch(path, opts){
+  const token = await getToken();
+  if(!token) throw new Error('not_signed_in');
+  const res = await fetch(SB_URL + '/rest/v1/' + path, Object.assign({}, opts, {
+    headers: Object.assign({'apikey':SB_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'}, (opts && opts.headers) || {})
+  }));
+  if(!res.ok) throw new Error('db_' + res.status);
+  return res;
+}
+async function loadLog(){
+  if(auth){
+    try{
+      const res = await dbFetch('coaching_sessions?select=data,created_at&order=created_at.desc&limit=200', {method:'GET'});
+      const rows = await res.json();
+      return rows.map(r => Object.assign({date: r.created_at}, r.data));
+    }catch(e){ console.error('account log load failed', e); }
+  }
+  return loadLocalLog();
+}
+async function addSession(summary){
+  if(auth){
+    try{
+      await dbFetch('coaching_sessions', {method:'POST', headers:{'Prefer':'return=minimal'}, body: JSON.stringify({data: summary})});
+      return;
+    }catch(e){ console.error('account save failed, keeping on this device', e); }
+  }
+  const log = await loadLocalLog();
+  log.unshift(summary);
+  await saveLocalLog(log);
+}
+async function syncLocalToAccount(){
+  if(!auth) return;
+  const local = await loadLocalLog();
+  if(!local.length) return;
+  try{
+    await dbFetch('coaching_sessions', {method:'POST', headers:{'Prefer':'return=minimal'}, body: JSON.stringify(local.map(d => ({data:d})))});
+    try{ localStorage.removeItem('asklandi-coaching-log'); }catch(e){}
+  }catch(e){ console.error('sync of device log failed', e); }
+}
+
+// ----- account UI -----
+function renderAccount(){
+  const area = document.getElementById('acct-area');
+  if(auth){
+    const name = (auth.email || '').split('@')[0] || 'Signed in';
+    area.innerHTML = `<span class="who" title="${escapeHtml(auth.email)}">${escapeHtml(name)}</span><button class="acct-btn" id="acct-out">Sign out</button>`;
+    document.getElementById('acct-out').addEventListener('click', doSignOut);
+  }else{
+    area.innerHTML = `<button class="acct-btn solid" id="acct-in">Sign in</button>`;
+    document.getElementById('acct-in').addEventListener('click', ()=> openAuth('in'));
+  }
+  const note = document.getElementById('log-acct-note');
+  if(note){
+    if(auth){
+      note.innerHTML = 'Your coaching log is saved to your account and follows you to any device.';
+    }else{
+      note.innerHTML = 'This log is only on this device. <button id="log-signin">Sign in to keep it on every device</button>';
+      document.getElementById('log-signin').addEventListener('click', ()=> openAuth('up'));
+    }
+  }
+}
+function setAuthMode(mode){
+  authMode = mode;
+  document.getElementById('mt-in').classList.toggle('active', mode==='in');
+  document.getElementById('mt-up').classList.toggle('active', mode==='up');
+  document.getElementById('auth-go').textContent = mode==='in' ? 'Sign in' : 'Create my account';
+  document.getElementById('auth-pass').setAttribute('autocomplete', mode==='in' ? 'current-password' : 'new-password');
+  const msg = document.getElementById('auth-msg'); msg.textContent=''; msg.className='msg';
+}
+function openAuth(mode){
+  setAuthMode(mode || 'in');
+  document.getElementById('auth-modal').classList.add('open');
+  setTimeout(()=> document.getElementById('auth-email').focus(), 50);
+}
+function closeAuth(){ document.getElementById('auth-modal').classList.remove('open'); }
+async function doSignOut(){
+  try{
+    const token = auth && auth.access_token;
+    writeAuth(null);
+    if(token){ fetch(SB_URL + '/auth/v1/logout', {method:'POST', headers:{'apikey':SB_KEY,'Authorization':'Bearer '+token}}).catch(()=>{}); }
+  }catch(e){}
+  renderAccount();
+  if(viewLog.style.display !== 'none') renderLog();
+}
+async function submitAuth(ev){
+  ev.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  const msg = document.getElementById('auth-msg');
+  const btn = document.getElementById('auth-go');
+  msg.className = 'msg';
+  if(!/^\S+@\S+\.\S+$/.test(email)){ msg.textContent = 'Please enter a valid email address.'; return; }
+  if(pass.length < 8){ msg.textContent = 'Please use a password with at least 8 characters.'; return; }
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = 'Please wait…';
+  try{
+    const data = authMode === 'up'
+      ? await authCall('/auth/v1/signup', {email, password: pass})
+      : await authCall('/auth/v1/token?grant_type=password', {email, password: pass});
+    const sess = sessionFrom(data);
+    if(!sess){
+      msg.className = 'msg ok';
+      msg.textContent = 'Account created. Please check your email to confirm it, then sign in.';
+      btn.textContent = label; btn.disabled = false;
+      return;
+    }
+    writeAuth(sess);
+    await syncLocalToAccount();
+    renderAccount();
+    closeAuth();
+    document.getElementById('auth-pass').value = '';
+    if(viewLog.style.display !== 'none') renderLog();
+  }catch(e){
+    msg.textContent = e.friendly ? e.message : 'Something went wrong. Please try again.';
+  }
+  btn.textContent = label; btn.disabled = false;
+}
+document.getElementById('auth-form').addEventListener('submit', submitAuth);
+document.getElementById('mt-in').addEventListener('click', ()=> setAuthMode('in'));
+document.getElementById('mt-up').addEventListener('click', ()=> setAuthMode('up'));
+document.getElementById('auth-close').addEventListener('click', closeAuth);
+document.getElementById('auth-modal').addEventListener('click', (e)=>{ if(e.target.id === 'auth-modal') closeAuth(); });
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeAuth(); });
+readAuth();
 
 // ---------- explanation language ----------
 const LANGS = {
@@ -602,9 +847,7 @@ async function endSession(){
     tip
   };
 
-  const log = await loadLog();
-  log.unshift(summary);
-  await saveLog(log);
+  await addSession(summary);
 
   renderSummary(summary);
 
@@ -645,6 +888,7 @@ function renderSummary(summary){
         <div class="stat"><div class="num">${entries.length ? entries[0][0] : '—'}</div><div class="lbl">Top focus area</div></div>
       </div>
       <div class="tip-box">${escapeHtml(summary.tip)}</div>
+      ${auth ? '<div class="meta" style="margin:-8px 0 16px">Saved to your account.</div>' : '<div class="meta" style="margin:-8px 0 16px">Saved on this device. <button type="button" id="summary-signin" style="border:none;background:none;color:var(--teal-deep);text-decoration:underline;padding:0">Sign in to keep it on every device</button></div>'}
       <div class="summary-actions">
         <button class="primary" id="new-session-btn">Start another session</button>
         <button id="view-log-btn">View coaching log</button>
@@ -652,6 +896,8 @@ function renderSummary(summary){
     </div>
   `;
   document.getElementById('new-session-btn').addEventListener('click', ()=> showView('launcher'));
+  const sgn = document.getElementById('summary-signin');
+  if(sgn) sgn.addEventListener('click', ()=> openAuth('up'));
   document.getElementById('view-log-btn').addEventListener('click', ()=> showView('log'));
 }
 
@@ -678,6 +924,7 @@ async function renderLog(){
 }
 
 // ---------- init ----------
+renderAccount();
 renderChips();
 renderGrid();
 </script>
