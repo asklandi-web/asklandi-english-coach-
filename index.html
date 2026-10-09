@@ -167,6 +167,50 @@
   .modal .fine{font-size:0.74rem;color:var(--muted);margin:12px 0 0;line-height:1.45;}
   .acct-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:0.86rem;color:var(--muted);margin-top:20px;}
   .acct-note button{border:1px solid var(--teal-deep);background:none;color:var(--teal-deep);padding:5px 12px;border-radius:999px;font-size:0.82rem;}
+  /* ---------- level test + review ---------- */
+  nav.tabs .badge{display:inline-block;min-width:18px;padding:1px 6px;border-radius:10px;background:var(--amber);color:#fff;font-size:0.72rem;margin-left:6px;line-height:1.4;}
+  nav.tabs button.active .badge{background:#fff;color:var(--teal-deep);}
+  .level-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:14px 18px;margin-top:6px;}
+  .level-banner .lb-text{font-size:0.92rem;line-height:1.45;}
+  .level-banner .lb-text b{font-weight:600;}
+  .lb-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn{padding:9px 16px;border-radius:999px;font-size:0.85rem;border:1px solid var(--teal-deep);background:none;color:var(--teal-deep);}
+  .btn.solid{background:var(--teal-deep);color:#fff;}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .panel-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px;margin-top:20px;}
+  .panel-card h3{margin:0 0 6px;font-size:1.25rem;font-weight:500;}
+  .panel-card .sub{color:var(--muted);font-size:0.88rem;line-height:1.5;margin:0 0 16px;}
+  .bar{height:6px;background:#E8E4D8;border-radius:4px;overflow:hidden;margin:6px 0 20px;}
+  .bar > i{display:block;height:100%;background:var(--teal);border-radius:4px;transition:width .2s;}
+  .q-meta{font-size:0.78rem;color:var(--muted);letter-spacing:.02em;}
+  .q-stem{font-family:'Fraunces',serif;font-size:1.35rem;line-height:1.35;margin:10px 0 18px;}
+  .q-stem u{display:inline-block;min-width:70px;border-bottom:2px solid var(--teal);text-decoration:none;}
+  .opts{display:grid;gap:10px;}
+  .opt{text-align:left;padding:13px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:1rem;color:var(--ink);}
+  .opt:active,.opt:hover{border-color:var(--teal);background:#F4FAF9;}
+  .res-level{font-family:'Fraunces',serif;font-size:2.2rem;margin:4px 0 2px;}
+  .skill-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #EEEADD;font-size:0.9rem;}
+  .skill-row:last-child{border-bottom:none;}
+  .rec-list{display:grid;gap:10px;margin-top:10px;}
+  .rec{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;}
+  .rec .t{font-weight:500;font-size:0.95rem;}
+  .rec .d{font-size:0.76rem;color:var(--muted);}
+  .rv-stats{display:flex;gap:28px;flex-wrap:wrap;margin:6px 0 18px;}
+  .rv-stats .num{font-family:'Fraunces',serif;font-size:2rem;line-height:1;}
+  .rv-stats .lbl{font-size:0.78rem;color:var(--muted);margin-top:2px;}
+  .rv-group h4{margin:22px 0 8px;font-size:0.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .rv-item{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:8px;}
+  .rv-item .wrong{color:#9A4B2A;text-decoration:line-through;text-decoration-color:rgba(154,75,42,.5);}
+  .rv-item .right{color:var(--teal-deep);font-weight:500;}
+  .rv-item .why{font-size:0.82rem;color:var(--muted);margin-top:4px;line-height:1.45;}
+  .rv-item .due{font-size:0.72rem;color:var(--muted);margin-top:6px;}
+  .rv-prompt{background:var(--error-bg);border:1px solid var(--error-line);border-radius:10px;padding:16px 18px;font-size:1.1rem;margin:10px 0 14px;}
+  .rv-input{width:100%;padding:13px 14px;font-size:1rem;border:1px solid var(--line);border-radius:10px;background:#fff;}
+  .rv-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(27,107,99,0.15);}
+  .rv-fb{margin-top:14px;padding:14px 16px;border-radius:10px;font-size:0.95rem;line-height:1.5;}
+  .rv-fb.ok{background:#E8F4F1;border:1px solid #A8D3CC;}
+  .rv-fb.no{background:#FBF1E6;border:1px solid var(--error-line);}
+  .rv-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
 </style>
 </head>
 <body>
@@ -191,6 +235,7 @@
       </label>
       <nav class="tabs">
         <button id="tab-launcher" class="active">Practice</button>
+        <button id="tab-review">Review<span class="badge" id="review-badge" style="display:none"></span></button>
         <button id="tab-log">Coaching Log</button>
       </nav>
       <div class="acct" id="acct-area"></div>
@@ -202,6 +247,8 @@
       <h1>Practice English in the room where it actually happens.</h1>
       <p>Pick a real-life situation, play it out with an AI conversation partner, and get corrected in the moment — not after a quiz.</p>
     </section>
+
+    <div class="level-banner" id="level-banner"></div>
 
     <div class="controls">
       <div class="search">
@@ -245,6 +292,23 @@
     </div>
 
     <div id="summary-wrap"></div>
+  </main>
+
+  <main id="view-review" style="display:none;">
+    <section class="hero" style="padding-top:36px;">
+      <h1 style="font-size:1.8rem;">Review</h1>
+      <p>Every mistake the coach catches is saved here. Practise them until they stick.</p>
+    </section>
+    <div class="acct-note" id="review-acct-note"></div>
+    <div id="review-body"></div>
+  </main>
+
+  <main id="view-test" style="display:none;">
+    <section class="hero" style="padding-top:36px;">
+      <h1 style="font-size:1.8rem;">Level test</h1>
+      <p>Twelve quick questions to find the right starting level. About five minutes.</p>
+    </section>
+    <div id="test-body"></div>
   </main>
 
   <main id="view-log" style="display:none;">
@@ -494,7 +558,10 @@ async function doSignOut(){
     if(token){ fetch(SB_URL + '/auth/v1/logout', {method:'POST', headers:{'apikey':SB_KEY,'Authorization':'Bearer '+token}}).catch(()=>{}); }
   }catch(e){}
   renderAccount();
+  reviewCache = null; placementCache = undefined;
+  updateReviewBadge(); renderLevelBanner();
   if(viewLog.style.display !== 'none') renderLog();
+  if(viewReview.style.display !== 'none') renderReview();
 }
 async function submitAuth(ev){
   ev.preventDefault();
@@ -521,10 +588,14 @@ async function submitAuth(ev){
     }
     writeAuth(sess);
     await syncLocalToAccount();
+    await syncItemsToAccount();
+    reviewCache = null; placementCache = undefined;
+    updateReviewBadge(); renderLevelBanner();
     renderAccount();
     closeAuth();
     document.getElementById('auth-pass').value = '';
     if(viewLog.style.display !== 'none') renderLog();
+    if(viewReview.style.display !== 'none') renderReview();
   }catch(e){
     msg.textContent = e.friendly ? e.message : 'Something went wrong. Please try again.';
   }
@@ -569,17 +640,27 @@ const tabLog = document.getElementById('tab-log');
 const viewLauncher = document.getElementById('view-launcher');
 const viewSession = document.getElementById('view-session');
 const viewLog = document.getElementById('view-log');
+const tabReview = document.getElementById('tab-review');
+const viewReview = document.getElementById('view-review');
+const viewTest = document.getElementById('view-test');
 
 function showView(name){
   viewLauncher.style.display = name==='launcher' ? '' : 'none';
   viewSession.style.display = name==='session' ? '' : 'none';
   viewLog.style.display = name==='log' ? '' : 'none';
-  tabLauncher.classList.toggle('active', name==='launcher' || name==='session');
+  viewReview.style.display = name==='review' ? '' : 'none';
+  viewTest.style.display = name==='test' ? '' : 'none';
+  tabLauncher.classList.toggle('active', name==='launcher' || name==='session' || name==='test');
   tabLog.classList.toggle('active', name==='log');
+  tabReview.classList.toggle('active', name==='review');
   if(name==='log') renderLog();
+  if(name==='review') renderReview();
+  if(name==='test') renderTestIntro();
+  window.scrollTo(0,0);
 }
 tabLauncher.addEventListener('click', ()=> showView(state.activeScenario && !state.sessionEnded ? 'session' : 'launcher'));
 tabLog.addEventListener('click', ()=> showView('log'));
+tabReview.addEventListener('click', ()=> showView('review'));
 
 // ---------- launcher rendering ----------
 function domainCount(id){
@@ -806,6 +887,7 @@ async function handleSend(){
       state.errorTally[c.error_type] = (state.errorTally[c.error_type]||0) + 1;
     });
     state.exchangeCount += 1;
+    saveCorrections(lastUser.corrections, state.activeScenario.title);
 
     state.history.push({role:'char', text: result.character_reply});
     renderTranscript();
@@ -891,6 +973,7 @@ function renderSummary(summary){
       ${auth ? '<div class="meta" style="margin:-8px 0 16px">Saved to your account.</div>' : '<div class="meta" style="margin:-8px 0 16px">Saved on this device. <button type="button" id="summary-signin" style="border:none;background:none;color:var(--teal-deep);text-decoration:underline;padding:0">Sign in to keep it on every device</button></div>'}
       <div class="summary-actions">
         <button class="primary" id="new-session-btn">Start another session</button>
+        <button id="review-btn">Review my mistakes</button>
         <button id="view-log-btn">View coaching log</button>
       </div>
     </div>
@@ -899,6 +982,7 @@ function renderSummary(summary){
   const sgn = document.getElementById('summary-signin');
   if(sgn) sgn.addEventListener('click', ()=> openAuth('up'));
   document.getElementById('view-log-btn').addEventListener('click', ()=> showView('log'));
+  document.getElementById('review-btn').addEventListener('click', ()=> showView('review'));
 }
 
 // ---------- log view ----------
@@ -923,10 +1007,338 @@ async function renderLog(){
   });
 }
 
+// ---------- learner items: review list + placement results ----------
+const ITEMS_LOCAL = 'asklandi-items';
+function readLocalItems(){ try{ return JSON.parse(localStorage.getItem(ITEMS_LOCAL) || '{}') || {}; }catch(e){ return {}; } }
+function writeLocalItems(o){ try{ localStorage.setItem(ITEMS_LOCAL, JSON.stringify(o)); }catch(e){} }
+async function itemsLoad(kind){
+  if(auth){
+    try{
+      const res = await dbFetch('learner_items?select=id,data,created_at&kind=eq.' + kind + '&order=created_at.desc&limit=1000', {method:'GET'});
+      return await res.json();
+    }catch(e){ console.error('items load failed', e); }
+  }
+  return readLocalItems()[kind] || [];
+}
+async function itemsAdd(kind, datas){
+  if(!datas.length) return;
+  if(auth){
+    try{
+      await dbFetch('learner_items', {method:'POST', headers:{'Prefer':'return=minimal'}, body: JSON.stringify(datas.map(d => ({kind, data:d})))});
+      return;
+    }catch(e){ console.error('items save failed, keeping on this device', e); }
+  }
+  const all = readLocalItems(); const arr = all[kind] || [];
+  datas.forEach(d => arr.unshift({id:'loc-' + Date.now() + '-' + Math.random().toString(36).slice(2,7), data:d, created_at:new Date().toISOString()}));
+  all[kind] = arr; writeLocalItems(all);
+}
+async function itemUpdate(kind, item){
+  if(auth && !String(item.id).startsWith('loc-')){
+    try{
+      await dbFetch('learner_items?id=eq.' + encodeURIComponent(item.id), {method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify({data:item.data, updated_at:new Date().toISOString()})});
+      return;
+    }catch(e){ console.error('item update failed', e); }
+  }
+  const all = readLocalItems(); const arr = all[kind] || [];
+  const i = arr.findIndex(x => x.id === item.id);
+  if(i >= 0){ arr[i] = item; all[kind] = arr; writeLocalItems(all); }
+}
+async function syncItemsToAccount(){
+  if(!auth) return;
+  const all = readLocalItems();
+  const rows = [];
+  Object.keys(all).forEach(k => (all[k] || []).slice().reverse().forEach(it => rows.push({kind:k, data:it.data})));
+  if(!rows.length) return;
+  try{
+    await dbFetch('learner_items', {method:'POST', headers:{'Prefer':'return=minimal'}, body: JSON.stringify(rows)});
+    try{ localStorage.removeItem(ITEMS_LOCAL); }catch(e){}
+  }catch(e){ console.error('sync of device items failed', e); }
+}
+
+// ---------- review list ----------
+const BOX_DAYS = [0, 1, 3, 7, 14, 30];
+let reviewCache = null;
+function normKey(s){ return String(s || '').toLowerCase().replace(/[^\p{L}\p{N} ]+/gu, ' ').replace(/\s+/g, ' ').trim(); }
+async function loadReview(force){
+  if(reviewCache && !force) return reviewCache;
+  const rows = await itemsLoad('review');
+  const seen = new Set(); const out = [];
+  rows.forEach(r => { if(!r || !r.data || seen.has(r.data.key)) return; seen.add(r.data.key); out.push(r); });
+  reviewCache = out;
+  return out;
+}
+function isDue(it){ return !it.data.due || new Date(it.data.due).getTime() <= Date.now(); }
+async function updateReviewBadge(){
+  const b = document.getElementById('review-badge');
+  if(!b) return;
+  try{
+    const items = await loadReview();
+    const n = items.filter(isDue).length;
+    b.textContent = n > 99 ? '99+' : String(n);
+    b.style.display = n ? '' : 'none';
+  }catch(e){ b.style.display = 'none'; }
+}
+async function saveCorrections(list, scenarioTitle){
+  try{
+    const existing = await loadReview();
+    const keys = new Set(existing.map(r => r.data.key));
+    const fresh = [];
+    (list || []).forEach(c => {
+      if(!c || !c.original || !c.corrected) return;
+      const key = normKey(c.original) + '>' + normKey(c.corrected);
+      if(keys.has(key)) return;
+      keys.add(key);
+      fresh.push({key, original:c.original, corrected:c.corrected, explanation:c.explanation || '', type:c.error_type || 'grammar', scenario:scenarioTitle || '', box:0, reps:0, due:new Date().toISOString(), added:new Date().toISOString()});
+    });
+    if(fresh.length){ await itemsAdd('review', fresh); reviewCache = null; updateReviewBadge(); }
+  }catch(e){ console.error('save corrections failed', e); }
+}
+function dueLabel(it){
+  const d = it.data;
+  if(isDue(it)) return 'Due now';
+  const days = Math.ceil((new Date(d.due).getTime() - Date.now()) / 86400000);
+  return days <= 1 ? 'Next review: tomorrow' : 'Next review: in ' + days + ' days';
+}
+async function renderReview(){
+  const note = document.getElementById('review-acct-note');
+  note.innerHTML = auth
+    ? 'Your review list is saved to your account and follows you to any device.'
+    : 'This list is only on this device. <button type="button" id="review-signin">Sign in to keep it on every device</button>';
+  const rs = document.getElementById('review-signin');
+  if(rs) rs.addEventListener('click', ()=> openAuth('up'));
+
+  const body = document.getElementById('review-body');
+  body.innerHTML = '<div class="acct-note" style="margin-top:20px">Loading your mistakes…</div>';
+  const items = await loadReview(true);
+  updateReviewBadge();
+  if(!items.length){
+    body.innerHTML = '<div class="empty">Nothing to review yet — finish a practice session and the coach\'s corrections will be saved here.</div>';
+    return;
+  }
+  const due = items.filter(isDue);
+  const mastered = items.filter(i => (i.data.box || 0) >= 4).length;
+  const groups = {};
+  items.forEach(i => { const t = i.data.type || 'grammar'; (groups[t] = groups[t] || []).push(i); });
+  const order = Object.keys(groups).sort((a,b) => groups[b].length - groups[a].length);
+  let html = `
+    <div class="panel-card">
+      <div class="rv-stats">
+        <div><div class="num">${due.length}</div><div class="lbl">Ready to review</div></div>
+        <div><div class="num">${items.length}</div><div class="lbl">Mistakes saved</div></div>
+        <div><div class="num">${mastered}</div><div class="lbl">Nearly mastered</div></div>
+      </div>
+      ${due.length
+        ? '<button class="btn solid" id="rv-start">Start review (' + Math.min(10, due.length) + ' cards)</button>'
+        : '<p class="sub" style="margin:0">You are all caught up. New cards will come back as they are due.</p>'}
+    </div>`;
+  let shown = 0;
+  order.forEach(t => {
+    html += '<div class="rv-group"><h4>' + escapeHtml(t) + ' · ' + groups[t].length + '</h4>';
+    groups[t].forEach(i => {
+      if(shown >= 80) return;
+      shown++;
+      const d = i.data;
+      html += `<div class="rv-item"><span class="wrong">${escapeHtml(d.original)}</span> → <span class="right">${escapeHtml(d.corrected)}</span>
+        ${d.explanation ? '<div class="why">' + escapeHtml(d.explanation) + '</div>' : ''}
+        <div class="due">${escapeHtml(dueLabel(i))}</div></div>`;
+    });
+    html += '</div>';
+  });
+  if(items.length > 80) html += '<p class="sub">Showing the first 80 mistakes.</p>';
+  body.innerHTML = html;
+  const st = document.getElementById('rv-start');
+  if(st) st.addEventListener('click', ()=> startReview(due));
+}
+
+let rv = {queue:[], i:0, first:0, total:0, requeued:{}};
+function startReview(due){
+  const sorted = due.slice().sort((a,b) => (a.data.box||0) - (b.data.box||0));
+  rv = {queue: sorted.slice(0, 10), i:0, first:0, total: Math.min(10, sorted.length), requeued:{}};
+  showReviewCard();
+}
+function showReviewCard(){
+  const body = document.getElementById('review-body');
+  if(rv.i >= rv.queue.length){
+    updateReviewBadge();
+    body.innerHTML = `<div class="panel-card"><h3>Review complete</h3>
+      <p class="sub">You got ${rv.first} of ${rv.total} right the first time. Cards you missed will come back soon.</p>
+      <div class="rv-row"><button class="btn solid" id="rv-done">Back to my list</button><button class="btn" id="rv-practice">Practise a scenario</button></div></div>`;
+    document.getElementById('rv-done').addEventListener('click', renderReview);
+    document.getElementById('rv-practice').addEventListener('click', ()=> showView('launcher'));
+    return;
+  }
+  const it = rv.queue[rv.i]; const d = it.data;
+  const pct = Math.round(rv.i / rv.queue.length * 100);
+  body.innerHTML = `<div class="panel-card">
+    <div class="q-meta">Card ${rv.i + 1} of ${rv.queue.length} · ${escapeHtml(d.type || 'grammar')}</div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div style="font-size:0.9rem;color:var(--muted)">Fix this, then check your answer:</div>
+    <div class="rv-prompt">${escapeHtml(d.original)}</div>
+    <input class="rv-input" id="rv-answer" type="text" placeholder="Type the corrected version…" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="rv-row" id="rv-actions"><button class="btn solid" id="rv-check">Check</button><button class="btn" id="rv-show">Show answer</button></div>
+    <div id="rv-feedback"></div></div>`;
+  const input = document.getElementById('rv-answer');
+  input.focus();
+  const check = ()=> checkReviewCard(input.value);
+  document.getElementById('rv-check').addEventListener('click', check);
+  document.getElementById('rv-show').addEventListener('click', ()=> checkReviewCard(null));
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') check(); });
+}
+function checkReviewCard(answer){
+  const it = rv.queue[rv.i]; const d = it.data;
+  const fb = document.getElementById('rv-feedback');
+  const actions = document.getElementById('rv-actions');
+  const input = document.getElementById('rv-answer');
+  input.disabled = true;
+  const why = d.explanation ? '<div class="why" style="margin-top:6px;color:var(--muted);font-size:0.86rem">' + escapeHtml(d.explanation) + '</div>' : '';
+  if(answer !== null && normKey(answer) === normKey(d.corrected)){
+    fb.innerHTML = '<div class="rv-fb ok"><b>Correct.</b> ' + escapeHtml(d.corrected) + why + '</div>';
+    actions.innerHTML = '<button class="btn solid" id="rv-next">Next</button>';
+    document.getElementById('rv-next').addEventListener('click', ()=> gradeReviewCard(true));
+    document.getElementById('rv-next').focus();
+  } else {
+    fb.innerHTML = '<div class="rv-fb no">' + (answer === null ? '' : 'Not quite. ') + 'The corrected version is: <b>' + escapeHtml(d.corrected) + '</b>' + why + '</div>';
+    actions.innerHTML = '<button class="btn solid" id="rv-gotit">I had it right</button><button class="btn" id="rv-again">I will practise this again</button>';
+    document.getElementById('rv-gotit').addEventListener('click', ()=> gradeReviewCard(true));
+    document.getElementById('rv-again').addEventListener('click', ()=> gradeReviewCard(false));
+  }
+}
+function gradeReviewCard(right){
+  const it = rv.queue[rv.i]; const d = it.data;
+  const retry = !!rv.requeued[it.id];
+  if(right){
+    d.box = Math.min((d.box || 0) + 1, 5);
+    d.reps = (d.reps || 0) + 1;
+    d.due = new Date(Date.now() + BOX_DAYS[d.box] * 86400000).toISOString();
+    if(!retry) rv.first++;
+  } else {
+    d.box = 0;
+    d.due = new Date().toISOString();
+    if(!retry){ rv.requeued[it.id] = 1; rv.queue.push(it); }
+  }
+  itemUpdate('review', it);
+  rv.i++;
+  showReviewCard();
+}
+
+// ---------- placement test ----------
+const PLACEMENT = [
+  {tier:'Foundation', skill:'Present simple', stem:'She ___ coffee every morning.', opts:['drink','drinks','drinking','drunk'], ans:1, why:'With he / she / it in the present simple, the verb takes -s: she drinks.'},
+  {tier:'Foundation', skill:'There is / there are', stem:'There ___ two meetings today.', opts:['is','am','are','be'], ans:2, why:'"Meetings" is plural, so we say "There are".'},
+  {tier:'Foundation', skill:'Prepositions', stem:'My flight leaves ___ 6 a.m.', opts:['at','on','in','to'], ans:0, why:'Use "at" with clock times.'},
+  {tier:'Foundation', skill:'Past simple', stem:'He ___ to the office yesterday.', opts:['go','goes','going','went'], ans:3, why:'"Yesterday" signals the past simple: went.'},
+  {tier:'Intermediate', skill:'Present perfect', stem:'I have worked here ___ 2019.', opts:['for','since','from','during'], ans:1, why:'"Since" goes with a starting point in time; "for" goes with a length of time.'},
+  {tier:'Intermediate', skill:'Conditionals', stem:'If it rains tomorrow, we ___ the event indoors.', opts:['will hold','would hold','had held','held'], ans:0, why:'With "If + present simple", use "will" for a likely future result.'},
+  {tier:'Intermediate', skill:'Phrasal verbs', type:'vocabulary', stem:'The meeting was ___ until next Monday.', opts:['put off','put out','put down','put away'], ans:0, why:'"Put off" means to postpone.'},
+  {tier:'Intermediate', skill:'Gerunds', stem:'I am not used to ___ up so early.', opts:['get','getting','got','have got'], ans:1, why:'After "be used to", use the -ing form.'},
+  {tier:'Fluent', skill:'Third conditional', stem:'Had I known about the delay, I ___ earlier.', opts:['would leave','would have left','will leave','had left'], ans:1, why:'For an unreal past situation, use "would have + past participle".'},
+  {tier:'Fluent', skill:'Relative clauses', stem:'The proposal, ___ was submitted last week, has not been reviewed.', opts:['who','whose','which','what'], ans:2, why:'"Which" refers to things.'},
+  {tier:'Fluent', skill:'Inversion', stem:'Not only ___ the deadline, but they also exceeded the budget.', opts:['they missed','did they miss','they did miss','missed they'], ans:1, why:'After "Not only" at the start, the helping verb comes first: "did they miss".'},
+  {tier:'Fluent', skill:'Subjunctive', stem:'The committee insisted that he ___ the report by Friday.', opts:['submits','submitted','submit','will submit'], ans:2, why:'After "insist that", use the base form of the verb: "he submit".'}
+];
+let tq = {i:0, picks:[]};
+let placementCache;
+async function loadPlacement(force){
+  if(placementCache !== undefined && !force) return placementCache;
+  const rows = await itemsLoad('placement');
+  placementCache = rows.length ? rows[0].data : null;
+  return placementCache;
+}
+function levelFromScore(score){ return score >= 10 ? 'Fluent' : score >= 6 ? 'Intermediate' : 'Foundation'; }
+async function renderLevelBanner(){
+  const el = document.getElementById('level-banner');
+  if(!el) return;
+  let p = null;
+  try{ p = await loadPlacement(); }catch(e){}
+  if(p){
+    el.innerHTML = `<div class="lb-text">Your level: <b>${escapeHtml(p.level)}</b> (${p.score}/${p.total} on the level test)</div>
+      <div class="lb-actions"><button class="btn solid" id="lb-show">Show my level</button><button class="btn" id="lb-retake">Retake test</button></div>`;
+    document.getElementById('lb-show').addEventListener('click', ()=>{ state.tier = p.level; renderChips(); renderGrid(); });
+  } else {
+    el.innerHTML = `<div class="lb-text"><b>Not sure where to start?</b> Take the 5-minute level test and we will suggest the right scenarios.</div>
+      <div class="lb-actions"><button class="btn solid" id="lb-retake">Take the level test</button></div>`;
+  }
+  document.getElementById('lb-retake').addEventListener('click', ()=> showView('test'));
+}
+function renderTestIntro(){
+  tq = {i:0, picks:[]};
+  const body = document.getElementById('test-body');
+  body.innerHTML = `<div class="panel-card"><h3>Find your level</h3>
+    <p class="sub">Choose the best word or phrase for each sentence. There is no time limit and nothing is marked against you. If you are not sure, make your best guess.</p>
+    <div class="rv-row" style="margin-top:0"><button class="btn solid" id="tq-start">Start the test</button></div></div>`;
+  document.getElementById('tq-start').addEventListener('click', renderTestQuestion);
+}
+function renderTestQuestion(){
+  const body = document.getElementById('test-body');
+  if(tq.i >= PLACEMENT.length){ finishTest(); return; }
+  const q = PLACEMENT[tq.i];
+  const pct = Math.round(tq.i / PLACEMENT.length * 100);
+  body.innerHTML = `<div class="panel-card">
+    <div class="q-meta">Question ${tq.i + 1} of ${PLACEMENT.length}</div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <div class="q-stem">${escapeHtml(q.stem).replace('___', '<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>')}</div>
+    <div class="opts">${q.opts.map((o, i) => '<button class="opt" data-i="' + i + '">' + escapeHtml(o) + '</button>').join('')}</div></div>`;
+  body.querySelectorAll('.opt').forEach(b => b.addEventListener('click', ()=>{
+    tq.picks.push(parseInt(b.dataset.i, 10));
+    tq.i++;
+    renderTestQuestion();
+  }));
+}
+async function finishTest(){
+  const body = document.getElementById('test-body');
+  let score = 0; const skills = {}; const wrong = [];
+  PLACEMENT.forEach((q, i) => {
+    const ok = tq.picks[i] === q.ans;
+    if(ok) score++;
+    skills[q.skill] = ok ? 1 : 0;
+    if(!ok){
+      wrong.push({key: normKey(q.stem.replace('___', q.opts[tq.picks[i]])) + '>' + normKey(q.stem.replace('___', q.opts[q.ans])),
+        original: q.stem.replace('___', q.opts[tq.picks[i]]), corrected: q.stem.replace('___', q.opts[q.ans]),
+        explanation: q.why, type: q.type || 'grammar', scenario: 'Level test', box:0, reps:0,
+        due: new Date().toISOString(), added: new Date().toISOString()});
+    }
+  });
+  const level = levelFromScore(score);
+  const result = {level, score, total: PLACEMENT.length, skills, date: new Date().toISOString()};
+  body.innerHTML = '<div class="acct-note" style="margin-top:20px">Marking your answers…</div>';
+  await itemsAdd('placement', [result]);
+  placementCache = result;
+  try{
+    const existing = await loadReview();
+    const keys = new Set(existing.map(r => r.data.key));
+    const fresh = wrong.filter(w => !keys.has(w.key));
+    if(fresh.length){ await itemsAdd('review', fresh); reviewCache = null; }
+  }catch(e){ console.error(e); }
+  updateReviewBadge(); renderLevelBanner();
+  const advice = {
+    Foundation: 'You have the basics. Start with Foundation scenarios to build confidence with everyday sentences.',
+    Intermediate: 'You can handle most everyday English. Intermediate scenarios will stretch you with longer, more demanding conversations.',
+    Fluent: 'You are comfortable with complex English. Fluent scenarios will polish your accuracy and professional tone.'
+  }[level];
+  const rec = SCENARIOS.filter(s => s.tier === level).slice(0, 3);
+  const skillRows = Object.keys(skills).map(k => '<div class="skill-row"><span>' + escapeHtml(k) + '</span><span>' + (skills[k] ? 'Correct' : 'Needs practice') + '</span></div>').join('');
+  body.innerHTML = `<div class="panel-card">
+    <div class="q-meta">Your result</div>
+    <div class="res-level">${escapeHtml(level)}</div>
+    <p class="sub">You scored ${score} out of ${PLACEMENT.length}. ${advice}${wrong.length ? ' The ' + wrong.length + ' question' + (wrong.length > 1 ? 's' : '') + ' you missed ' + (wrong.length > 1 ? 'were' : 'was') + ' added to your Review list.' : ''}</p>
+    <div>${skillRows}</div></div>
+    <div class="panel-card"><h3>Good scenarios to start with</h3><div class="rec-list">
+      ${rec.map(s => '<div class="rec"><div><div class="t">' + escapeHtml(s.title) + '</div><div class="d">' + escapeHtml(DOMAINS.find(d => d.id === s.domain).name) + ' · ' + escapeHtml(s.tier) + '</div></div><button class="btn solid" data-sid="' + escapeHtml(s.id) + '">Start</button></div>').join('')}
+    </div>
+    <div class="rv-row"><button class="btn" id="tq-all">See all ${escapeHtml(level)} scenarios</button>${wrong.length ? '<button class="btn" id="tq-review">Practise my missed questions</button>' : ''}</div></div>`;
+  body.querySelectorAll('[data-sid]').forEach(b => b.addEventListener('click', ()=> startSession(SCENARIOS.find(s => s.id === b.dataset.sid))));
+  document.getElementById('tq-all').addEventListener('click', ()=>{ state.tier = level; renderChips(); renderGrid(); showView('launcher'); });
+  const tr = document.getElementById('tq-review');
+  if(tr) tr.addEventListener('click', ()=> showView('review'));
+}
+
 // ---------- init ----------
 renderAccount();
 renderChips();
 renderGrid();
+renderLevelBanner();
+updateReviewBadge();
+if(auth) syncItemsToAccount();
 </script>
 </body>
 </html>
