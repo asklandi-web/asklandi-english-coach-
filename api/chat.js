@@ -280,6 +280,14 @@ export default async function handler(req, res) {
           c.original.toLowerCase() !== c.corrected.toLowerCase()
       );
 
+        if (visitorKey) {
+      try {
+        await redis(["INCR", visitorKey]);
+        await redis(["EXPIRE", visitorKey, String(VISITOR_TTL)]);
+        await redis(["INCR", ipKey]);
+        await redis(["EXPIRE", ipKey, String(IP_TTL)]);
+      } catch (e) {}
+    }
     return res.status(200).json({
       character_reply: text(parsed.character_reply, 800),
       corrections,
