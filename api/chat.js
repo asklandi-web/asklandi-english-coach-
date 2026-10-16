@@ -206,7 +206,36 @@ export default async function handler(req, res) {
   }
 
   const body = req.body && typeof req.body === "object" ? req.body : {};
-
+    let visitorKey = null;
+  let ipKey = null;
+  const demoOk =
+    !!process.env.DEMO_CODE && req.headers["x-demo-code"] === process.env.DEMO_CODE;
+  if (REDIS_URL && REDIS_TOKEN && !demoOk && body.mode !== "translate") {
+    try {
+      let vid = getCookie(req, "coach_vid");
+      if (!vid || !/^[a-zA-Z0-9-]{8,64}$/.test(vid)) {
+        vid = randomUUID();
+        res.setHeader(
+          "Set-Cookie",
+          `coach_vid=${vid}; Path=/; Max-Age=${VISITOR_TTL}; HttpOnly; Secure; SameSite=Lax`
+        );
+      }
+      visitorKey = `coach:v:${vid}`;
+      ipKey = `coach:ip:${ip}`;
+      const used = parseInt((await redis(["GET", visitorKey])) || "0", 10);
+      const ipUsed = parseInt((await redis(["GET", ipKey])) || "0", 10);
+      if (used >= FREE_TURNS || ipUsed >= IP_DAILY_TURNS) {
+        return res.status(503).json({
+          error: "limit_reached",
+          code: "limit_reached",
+          message: LIMIT_MESSAGE,
+        });
+      }
+    } catch (e) {
+      visitorKey = null;
+      ipKey = null;
+    }
+  }
   try {
     if (body.mode === "translate") {
       const lang = LANGUAGES[body.language] ? body.language : null;
