@@ -275,3 +275,34 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "server_error" });
   }
 }
+
+import { randomUUID } from "crypto";
+
+// ---- Free-use limit (no sign-in): counts coach turns per visitor in Upstash Redis ----
+// If Redis is not configured or errors, the app stays open (no limit).
+const FREE_TURNS = parseInt(process.env.FREE_TURNS || "15", 10);
+const IP_DAILY_TURNS = parseInt(process.env.IP_DAILY_TURNS || "150", 10);
+const VISITOR_TTL = 60 * 60 * 24 * 30;
+const IP_TTL = 60 * 60 * 24;
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+async function redis(command) {
+  const r = await fetch(REDIS_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${REDIS_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify(command),
+  });
+  const j = await r.json();
+  if (j.error) throw new Error(j.error);
+  return j.result;
+}
+
+function getCookie(req, name) {
+  const raw = req.headers.cookie || "";
+  const m = raw.split(";").map((c) => c.trim()).find((c) => c.startsWith(name + "="));
+  return m ? decodeURIComponent(m.slice(name.length + 1)) : null;
+}
+
+const LIMIT_MESSAGE =
+  "You have used your free practice sessions. To continue, please contact Landi Institute at info@institutelandi.com and we will arrange access for you or your institution.";
